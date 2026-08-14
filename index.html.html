@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0C1418">
+<title>สถานีคัดกรองการทรงตัว</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C1418; --panel:#152229; --line:#26383F;
+  --fg:#EAF2F4; --mute:#90A7AF;
+  --go:#3FD08A; --warn:#FFC24B; --stop:#FF6B5A;
+  --thai:'IBM Plex Sans Thai Looped','Noto Sans Thai Looped','Sarabun',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{background:var(--ink);color:var(--fg);font-family:var(--thai);font-size:19px;line-height:1.45;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+input{font-family:inherit;font-size:16px}
+#app{height:100%;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);flex:0 0 auto}
+header b{font-weight:700;font-size:18px}
+header .sitelabel{color:var(--mute);font-size:13px;display:block}
+#status{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:7px;text-align:right}
+#status .dot{width:9px;height:9px;border-radius:50%;background:var(--mute);flex:0 0 auto}
+#status.ok .dot{background:var(--go)} #status.warn .dot{background:var(--warn)} #status.bad .dot{background:var(--stop)}
+main{flex:1 1 auto;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.on{display:block}
+.pad{max-width:720px;margin:0 auto;padding:20px 16px calc(40px + var(--safe-b))}
+h1{font-size:26px;font-weight:700;line-height:1.3;margin-bottom:5px}
+.sub{color:var(--mute);font-size:15px;margin-bottom:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-weight:600;margin-bottom:7px}
+.field input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:19px}
+.field input:focus-visible,button:focus-visible{outline:3px solid var(--go);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.chip{flex:1 1 0;min-width:110px;padding:14px 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:18px;text-align:center}
+.chip[aria-pressed=true]{background:var(--go);color:#06231A;border-color:var(--go);font-weight:700}
+.rf{display:block;width:100%;text-align:left;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:17px;margin-bottom:9px;line-height:1.4}
+.rf[aria-pressed=true]{border-color:var(--warn);background:rgba(255,194,75,.13);font-weight:600}
+.rf::before{content:"○  ";color:var(--mute)}
+.rf[aria-pressed=true]::before{content:"●  ";color:var(--warn)}
+.btn{width:100%;padding:17px;border-radius:14px;border:none;background:var(--go);color:#06231A;font-size:21px;font-weight:700;margin-top:10px}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);font-weight:600;font-size:18px}
+.btn.dim{background:var(--panel);color:var(--fg);border:1px solid var(--line);font-weight:600;font-size:18px}
+.btn:disabled{opacity:.4}
+.note{color:var(--mute);font-size:14px;margin-top:12px;line-height:1.6}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 17px;margin-bottom:13px}
+.card h3{font-size:17px;margin-bottom:9px}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:16px}
+.kv:last-child{border-bottom:none}
+.kv span:first-child{color:var(--mute)}
+.kv .v{font-family:var(--mono);text-align:right}
+.v.ok{color:var(--go)} .v.warn{color:var(--warn)} .v.bad{color:var(--stop)}
+.who{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.who .nm{font-size:22px;font-weight:700}
+.who .meta{color:var(--mute);font-size:14px;margin-top:3px;font-family:var(--mono)}
+.slot{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:16px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--fg);margin-bottom:11px;text-align:left}
+.slot .t{font-size:18px;font-weight:600}
+.slot .s{font-size:14px;color:var(--mute);margin-top:2px;font-family:var(--mono)}
+.slot .s.ok{color:var(--go)} .slot .s.warn{color:var(--warn)} .slot .s.bad{color:var(--stop)}
+.slot .go{font-size:14px;color:var(--go);font-weight:700;flex:0 0 auto}
+/* stage */
+#stage{position:absolute;inset:0;background:#000}
+#cam,#overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#overlay{pointer-events:none}
+#veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,14,18,.55),rgba(8,14,18,.15) 35%,rgba(8,14,18,.85))}
+#hud{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:12px 12px calc(12px + var(--safe-b))}
+#cue{align-self:center;text-align:center;font-size:20px;font-weight:600;background:rgba(10,18,22,.8);border:1px solid var(--line);padding:10px 18px;border-radius:999px;max-width:94%}
+#cue.warn{color:var(--warn);border-color:var(--warn)} #cue.ok{color:var(--go);border-color:var(--go)}
+#gauge{position:relative;align-self:center;width:min(48vh,280px);aspect-ratio:1}
+#ring{position:absolute;inset:0;transform:rotate(-90deg)}
+#ring circle{fill:none;stroke-linecap:round}
+.trackC{stroke:rgba(255,255,255,.10);stroke-width:8}
+.drainC{stroke:var(--go);stroke-width:8;transition:stroke-dashoffset .1s linear}
+#ticks{position:absolute;inset:0}
+#readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#count{font-family:var(--mono);font-weight:700;font-size:min(23vh,128px);line-height:.9;letter-spacing:-.03em;text-shadow:0 2px 18px rgba(0,0,0,.55)}
+#unit{color:#CFE0E4;font-size:16px;margin-top:5px}
+#clock{font-family:var(--mono);font-size:20px;color:var(--go);margin-top:3px}
+#gauge.pulse #count{animation:pop .28s ease-out}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#gauge.pulse #count{animation:none}}
+#controls{display:flex;gap:9px}
+#controls button{flex:1;padding:15px 6px;border-radius:14px;border:1px solid var(--line);background:rgba(16,26,32,.88);color:var(--fg);font-weight:600;font-size:16px}
+#controls button.primary{background:var(--go);color:#06231A;border-color:var(--go);font-weight:700}
+#controls button.tap{background:var(--warn);color:#2A1C00;border-color:var(--warn);font-weight:700}
+/* result */
+.band{padding:22px 16px;text-align:center}
+.band .verdict{font-size:27px;font-weight:700;line-height:1.25}
+.band .when{font-size:14px;color:var(--mute);font-family:var(--mono);margin-top:8px}
+.band.go{background:rgba(63,208,138,.14);border-bottom:3px solid var(--go)} .band.go .verdict{color:var(--go)}
+.band.warn{background:rgba(255,194,75,.14);border-bottom:3px solid var(--warn)} .band.warn .verdict{color:var(--warn)}
+.band.stop{background:rgba(255,107,90,.14);border-bottom:3px solid var(--stop)} .band.stop .verdict{color:var(--stop)}
+.big{font-family:var(--mono);font-size:62px;font-weight:700;line-height:1}
+.metric{display:flex;justify-content:center;align-items:baseline;gap:10px;margin-bottom:6px}
+.metric small{color:var(--mute);font-size:16px;font-family:var(--thai)}
+ul.advice{list-style:none}
+ul.advice li{padding:7px 0 7px 24px;position:relative;font-size:16px;line-height:1.55}
+ul.advice li::before{content:"—";position:absolute;left:0;color:var(--go)}
+ul.advice.warnlist li::before{color:var(--warn)}
+#rhythm{width:100%;height:60px;display:block;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:600;font-size:13px}
+td.num{font-family:var(--mono)}
+.tag{padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.tag.go{background:rgba(63,208,138,.18);color:var(--go)}
+.tag.warn{background:rgba(255,194,75,.18);color:var(--warn)}
+.tag.stop{background:rgba(255,107,90,.18);color:var(--stop)}
+.empty{color:var(--mute);text-align:center;padding:36px 0}
+.refrow{display:grid;grid-template-columns:1fr 76px 76px;gap:8px;align-items:center;margin-bottom:7px}
+.refrow span{font-size:15px;color:var(--mute)}
+.refrow input{width:100%;padding:9px 8px;border-radius:9px;border:1px solid var(--line);background:var(--ink);color:var(--fg);font-family:var(--mono);text-align:center;font-size:16px}
+.refhead{display:grid;grid-template-columns:1fr 76px 76px;gap:8px;margin-bottom:7px;font-size:13px;color:var(--mute);text-align:center}
+.refhead span:first-child{text-align:left}
+.reftwo label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px;padding:6px 0}
+.reftwo input{width:92px;padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--ink);color:var(--fg);font-family:var(--mono);text-align:center;font-size:16px}
+.valbox{background:rgba(255,194,75,.10);border:1px solid var(--warn);border-radius:14px;padding:14px 16px;margin-bottom:13px}
+.valbox h3{font-size:16px;margin-bottom:8px;color:var(--warn)}
+.valbox input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--ink);color:var(--fg);font-family:var(--mono);font-size:18px;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(24px + var(--safe-b));transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:12px 20px;border-radius:999px;font-size:16px;z-index:50;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div><b>สถานีคัดกรองการทรงตัว</b><span class="sitelabel" id="ctxLabel">ยังไม่ได้ตั้งค่าหน่วยบริการ</span></div>
+    <div id="status"><span class="dot"></span><span id="statusText">กำลังตรวจสอบ…</span></div>
+  </header>
+
+  <main>
+    <!-- 1 ลงทะเบียน -->
+    <section class="screen on" id="scSetup">
+      <div class="pad">
+        <h1>ลงทะเบียนผู้รับบริการ</h1>
+        <p class="sub">กรอกครั้งเดียว ใช้ได้ทั้งสองแบบทดสอบ</p>
+        <div class="field"><label for="fName">ชื่อ หรือ รหัสผู้รับบริการ</label>
+          <input type="text" id="fName" placeholder="เช่น 001 หรือ นางสมศรี" autocomplete="off"></div>
+        <div class="field"><label for="fAge">อายุ (ปี)</label>
+          <input type="number" id="fAge" min="40" max="110" inputmode="numeric" placeholder="เช่น 72"></div>
+        <div class="field"><label>เพศ</label>
+          <div class="row">
+            <button class="chip" data-sex="female" aria-pressed="false">หญิง</button>
+            <button class="chip" data-sex="male" aria-pressed="false">ชาย</button>
+          </div></div>
+        <button class="btn" id="btnEnter">ถัดไป</button>
+        <button class="btn ghost" id="btnLog">รายชื่อที่คัดกรองแล้ว (<span id="logCount">0</span>)</button>
+        <button class="btn ghost" id="btnCfg">ตั้งค่าและตรวจสอบระบบ</button>
+      </div>
+    </section>
+
+    <!-- 2 หน้าผู้รับบริการ -->
+    <section class="screen" id="scHub">
+      <div class="pad">
+        <div class="who"><div class="nm" id="hubName">—</div><div class="meta" id="hubMeta">—</div></div>
+        <button class="slot" id="slotSTS">
+          <div><div class="t">1. ลุกนั่ง 30 วินาที</div><div class="s" id="stSTS">ยังไม่ได้ทดสอบ</div></div>
+          <div class="go">เริ่ม ›</div></button>
+        <button class="slot" id="slotTUG">
+          <div><div class="t">2. ลุกเดินไป-กลับ 3 เมตร</div><div class="s" id="stTUG">ยังไม่ได้ทดสอบ</div></div>
+          <div class="go">เริ่ม ›</div></button>
+        <button class="slot" id="slotRisk">
+          <div><div class="t">3. ปัจจัยเสี่ยงต่อการหกล้ม</div><div class="s" id="stRisk">ยังไม่ได้ประเมิน</div></div>
+          <div class="go">ประเมิน ›</div></button>
+        <button class="btn" id="btnSummary">ดูสรุปผลและบันทึก</button>
+        <button class="btn ghost" id="btnNewPerson">เปลี่ยนผู้รับบริการ</button>
+      </div>
+    </section>
+
+    <!-- 3 ทดสอบ -->
+    <section class="screen" id="scTest">
+      <div id="stage">
+        <video id="cam" playsinline muted autoplay></video>
+        <canvas id="overlay"></canvas>
+        <div id="veil"></div>
+        <div id="hud">
+          <div id="cue">กำลังเปิดกล้อง…</div>
+          <div id="gauge">
+            <svg id="ring" viewBox="0 0 200 200">
+              <circle class="trackC" cx="100" cy="100" r="92"></circle>
+              <circle class="drainC" id="drain" cx="100" cy="100" r="92"></circle>
+            </svg>
+            <svg id="ticks" viewBox="0 0 200 200"></svg>
+            <div id="readout"><div id="count">0</div><div id="unit">ครั้ง</div><div id="clock">30.0 วินาที</div></div>
+          </div>
+          <div id="controls">
+            <button id="btnBack">ยกเลิก</button>
+            <button id="btnFlip">สลับกล้อง</button>
+            <button id="btnTap" class="tap" hidden>กดนับเอง</button>
+            <button id="btnGo" class="primary">เริ่มจับเวลา</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 ผลรายการทดสอบ -->
+    <section class="screen" id="scResult">
+      <div class="band" id="resBand">
+        <div class="metric"><div class="big" id="resValue">0</div><small id="resUnit">ครั้ง</small></div>
+        <div class="verdict" id="resVerdict">—</div>
+        <div class="when" id="resWhen">—</div>
+      </div>
+      <div class="pad">
+        <div class="card" id="rhythmCard"><h3>จังหวะการลุกแต่ละครั้ง</h3>
+          <svg id="rhythm" viewBox="0 0 300 60" preserveAspectRatio="none"></svg>
+          <p class="note" id="rhythmNote"></p></div>
+        <div class="card" id="gaitCard"><h3>จังหวะก้าวเดิน</h3>
+          <svg id="stepChart" viewBox="0 0 300 60" preserveAspectRatio="none"></svg>
+          <div id="gaitFigures"></div>
+          <p class="note" id="gaitNote"></p></div>
+        <div class="card" id="refBox"></div>
+        <div class="valbox" id="valBox" hidden>
+          <h3>ค่าที่ผู้ประเมินวัดด้วยตนเอง</h3>
+          <input type="number" id="fManual" step="0.1" inputmode="decimal" placeholder="กรอกค่าที่นับหรือจับเวลาได้">
+          <p class="note">กรอกโดยไม่ดูค่าที่ระบบแสดง เพื่อให้การเปรียบเทียบไม่มีอคติ ระบบจะบันทึกทั้งสองค่าไว้คู่กัน</p>
+        </div>
+        <button class="btn" id="btnResultBack">กลับไปหน้าผู้รับบริการ</button>
+        <button class="btn ghost" id="btnRetry">ทดสอบซ้ำ</button>
+      </div>
+    </section>
+
+    <!-- 5 ปัจจัยเสี่ยง -->
+    <section class="screen" id="scRisk">
+      <div class="pad">
+        <h1>ปัจจัยเสี่ยงต่อการหกล้ม</h1>
+        <p class="sub">แตะข้อที่ตรงกับผู้รับบริการ ตอบตามความเป็นจริง</p>
+        <div id="rfList"></div>
+        <button class="btn" id="btnRiskDone">บันทึกแล้วกลับ</button>
+      </div>
+    </section>
+
+    <!-- 6 สรุป -->
+    <section class="screen" id="scSum">
+      <div class="band" id="sumBand">
+        <div class="verdict" id="sumVerdict">—</div>
+        <div class="when" id="sumWhen">—</div>
+      </div>
+      <div class="pad">
+        <div class="card" id="sumFigures"></div>
+        <div class="card" id="sumPattern"></div>
+        <div class="card" id="sumRisk"></div>
+        <div class="card"><h3>แผนการดำเนินการต่อไป</h3><ul class="advice" id="sumPlan"></ul></div>
+        <button class="btn" id="btnSaveAll">บันทึกลง Google Sheet</button>
+        <button class="btn ghost" id="btnSumBack">กลับไปแก้ไข</button>
+      </div>
+    </section>
+
+    <!-- 7 รายชื่อ -->
+    <section class="screen" id="scLog">
+      <div class="pad">
+        <h1>รายชื่อที่คัดกรองแล้ว</h1>
+        <p class="sub" id="logSub">—</p>
+        <div class="card" id="iccBox" hidden></div>
+        <div id="logWrap"></div>
+        <button class="btn" id="btnResend">ส่งรายการที่ค้างขึ้น Google Sheet</button>
+        <button class="btn ghost" id="btnCsv">บันทึกเป็นไฟล์ CSV</button>
+        <button class="btn ghost" id="btnLogBack">กลับหน้าแรก</button>
+      </div>
+    </section>
+
+    <!-- 8 ตั้งค่า -->
+    <section class="screen" id="scCfg">
+      <div class="pad">
+        <h1>ตั้งค่าและตรวจสอบระบบ</h1>
+        <div class="card" id="diag"></div>
+        <div class="field"><label for="fSite">ชื่อหน่วยบริการ</label>
+          <input type="text" id="fSite" placeholder="เช่น ศูนย์บริการสาธารณสุขที่ 1"></div>
+        <div class="field"><label for="fDist">ระยะทางเดินไป-กลับ ด้านเดียว (เมตร)</label>
+          <input type="number" id="fDist" min="1" max="10" step="0.5" placeholder="3"></div>
+        <div class="field"><label for="fSheet">ลิงก์เชื่อมต่อ Google Sheet</label>
+          <input type="text" id="fSheet" placeholder="ลิงก์ที่ลงท้ายด้วย /exec" autocomplete="off" spellcheck="false"></div>
+        <button class="btn ghost" id="btnTestSheet">ทดสอบการเชื่อมต่อ</button>
+        <div class="field" style="margin-top:18px"><label>โหมดเก็บข้อมูลตรวจสอบความเที่ยง (ICC)</label>
+          <div class="row">
+            <button class="chip" data-val="off" aria-pressed="true">ปิด</button>
+            <button class="chip" data-val="on" aria-pressed="false">เปิด</button>
+          </div>
+          <p class="note">เมื่อเปิด หน้าผลจะมีช่องให้กรอกค่าที่ผู้ประเมินวัดด้วยตนเอง เพื่อนำไปเทียบกับค่าที่ระบบวัดได้</p></div>
+        <button class="btn dim" id="btnRefCfg">ตั้งค่าเกณฑ์อ้างอิง ›</button>
+        <button class="btn" id="btnSaveCfg">บันทึกการตั้งค่า</button>
+        <p class="note">บันทึกแล้วให้กดแชร์ → เพิ่มไปยังหน้าจอโฮม จะเปิดใช้ครั้งต่อไปได้ทันทีโดยไม่ต้องตั้งค่าซ้ำ</p>
+      </div>
+    </section>
+    <!-- 9 เกณฑ์อ้างอิง -->
+    <section class="screen" id="scRef">
+      <div class="pad">
+        <h1>เกณฑ์อ้างอิง</h1>
+        <p class="sub">แก้ไขได้ทั้งหมด เพื่อให้ใช้เกณฑ์ที่เหมาะกับประชากรของหน่วยงาน</p>
+        <div class="field"><label for="fRefSrc">แหล่งที่มาของเกณฑ์</label>
+          <input type="text" id="fRefSrc" placeholder="เช่น Rikli &amp; Jones 1999"></div>
+        <div class="card"><h3>ลุกนั่ง 30 วินาที — จำนวนครั้งขั้นต่ำที่ถือว่าปกติ</h3>
+          <div id="refGrid"></div></div>
+        <div class="card"><h3>ลุกเดินไป-กลับ (วินาที)</h3>
+          <div class="reftwo">
+            <label>เฝ้าระวังเมื่อ ≥<input type="number" id="fTugW" step="0.5" min="5" max="40"></label>
+            <label>เสี่ยงสูงเมื่อ ≥<input type="number" id="fTugR" step="0.5" min="5" max="60"></label>
+          </div></div>
+        <div class="card"><h3>การก้าวเดิน</h3>
+          <div class="reftwo">
+            <label>จังหวะก้าวช้าเมื่อ &lt;<input type="number" id="fCad" step="1" min="30" max="160"> ก้าว/นาที</label>
+            <label>จังหวะไม่สม่ำเสมอเมื่อ &gt;<input type="number" id="fCv" step="1" min="1" max="50"> %</label>
+            <label>ไม่สมมาตรเมื่อ &gt;<input type="number" id="fAsym" step="1" min="1" max="50"> %</label>
+            <label>ก้าวสั้นเมื่อ &lt;<input type="number" id="fLen" step="0.05" min="0.1" max="1.5"> เมตร</label>
+          </div></div>
+        <button class="btn" id="btnRefSave">บันทึกเกณฑ์</button>
+        <button class="btn ghost" id="btnRefCopy">คัดลอกเกณฑ์ไปเครื่องอื่น</button>
+        <button class="btn ghost" id="btnRefPaste">วางเกณฑ์จากเครื่องอื่น</button>
+        <button class="btn ghost" id="btnRefReset">คืนค่าเริ่มต้น Rikli &amp; Jones</button>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+const $=s=>document.querySelector(s);
+const S={site:'',sheet:'',dist:3,validate:false,facing:'environment',phase:'setup',
+  person:null, test:'sts', reps:0, stamps:[], t0:0, tug:null, records:[]};
+
+/* ---------- วันเวลาแบบไทย ---------- */
+const M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function thaiDT(d){d=d||new Date();
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()+543}  ${p(d.getHours())}:${p(d.getMinutes())} น.`;}
+
+/* ---------- ตั้งค่า ---------- */
+function loadCfg(){
+  const q=new URLSearchParams(location.search);
+  let site=q.get('site')||'',sheet=q.get('sheet')||'';
+  let dist=q.get('dist')||'';
+  try{site=site||localStorage.getItem('pt_site')||'';sheet=sheet||localStorage.getItem('pt_sheet')||'';
+      dist=dist||localStorage.getItem('pt_dist')||'';
+      S.validate=localStorage.getItem('pt_val')==='1';}catch(e){}
+  document.querySelectorAll('[data-val]').forEach(x=>
+    x.setAttribute('aria-pressed',(x.dataset.val==='on')===S.validate?'true':'false'));
+  S.site=site;S.sheet=sheet;S.dist=parseFloat(dist)||3;
+  $('#fSite').value=site;$('#fSheet').value=sheet;$('#fDist').value=S.dist;
+  $('#ctxLabel').textContent=site||'ยังไม่ได้ตั้งค่าหน่วยบริการ';
+}
+function saveCfg(){
+  S.site=$('#fSite').value.trim();S.sheet=$('#fSheet').value.trim();
+  S.dist=parseFloat($('#fDist').value)||3;
+  try{localStorage.setItem('pt_site',S.site);localStorage.setItem('pt_sheet',S.sheet);
+      localStorage.setItem('pt_dist',String(S.dist));
+      localStorage.setItem('pt_val',S.validate?'1':'0');}catch(e){}
+  const q=new URLSearchParams();if(S.site)q.set('site',S.site);if(S.sheet)q.set('sheet',S.sheet);
+  q.set('dist',String(S.dist));
+  history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:''));
+  $('#ctxLabel').textContent=S.site||'ยังไม่ได้ตั้งค่าหน่วยบริการ';
+  toast('บันทึกการตั้งค่าแล้ว');refreshStatus();show('#scSetup');
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2600);}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo?.(0,0);$(id).scrollTop=0;}
+
+/* ---------- เกณฑ์อ้างอิง ---------- */
+const BANDS=[[60,64],[65,69],[70,74],[75,79],[80,84],[85,89],[90,120]];
+const DEFAULT_REF={
+  source:'Rikli & Jones 1999 (Senior Fitness Test)',
+  male:[14,12,12,11,10,8,7],
+  female:[12,11,10,10,9,8,4],
+  tugW:12.0,tugR:14.0,
+  cad:80,cv:10,asym:10,len:.40
+};
+let REF=JSON.parse(JSON.stringify(DEFAULT_REF));
+function loadRef(){
+  try{const s=localStorage.getItem('pt_ref');if(s)REF=Object.assign(JSON.parse(JSON.stringify(DEFAULT_REF)),JSON.parse(s));}catch(e){}
+}
+function stsLower(age,sex){
+  const arr=(sex==='male'?REF.male:REF.female);
+  if(age<60)return arr[0];
+  for(let i=0;i<BANDS.length;i++){if(age>=BANDS[i][0]&&age<=BANDS[i][1])return arr[i];}
+  return arr[arr.length-1];
+}
+function buildRefUI(){
+  $('#refGrid').innerHTML='<div class="refhead"><span>ช่วงอายุ (ปี)</span><span>หญิง</span><span>ชาย</span></div>'+
+    BANDS.map((b,i)=>`<div class="refrow"><span>${b[0]}–${b[1]===120?'ขึ้นไป':b[1]}</span>
+      <input type="number" min="0" max="40" data-ref="female" data-i="${i}">
+      <input type="number" min="0" max="40" data-ref="male" data-i="${i}"></div>`).join('');
+}
+function paintRef(){
+  $('#fRefSrc').value=REF.source;
+  document.querySelectorAll('[data-ref]').forEach(inp=>{inp.value=REF[inp.dataset.ref][+inp.dataset.i];});
+  $('#fTugW').value=REF.tugW;$('#fTugR').value=REF.tugR;
+  $('#fCad').value=REF.cad;$('#fCv').value=REF.cv;$('#fAsym').value=REF.asym;$('#fLen').value=REF.len;
+}
+function readRef(){
+  const r=JSON.parse(JSON.stringify(REF));
+  r.source=$('#fRefSrc').value.trim()||DEFAULT_REF.source;
+  document.querySelectorAll('[data-ref]').forEach(inp=>{
+    const v=parseFloat(inp.value);if(!isNaN(v))r[inp.dataset.ref][+inp.dataset.i]=v;});
+  const n=(id,d)=>{const v=parseFloat($(id).value);return isNaN(v)?d:v;};
+  r.tugW=n('#fTugW',DEFAULT_REF.tugW);r.tugR=n('#fTugR',DEFAULT_REF.tugR);
+  r.cad=n('#fCad',DEFAULT_REF.cad);r.cv=n('#fCv',DEFAULT_REF.cv);
+  r.asym=n('#fAsym',DEFAULT_REF.asym);r.len=n('#fLen',DEFAULT_REF.len);
+  return r;
+}
+document.querySelectorAll('[data-val]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-val]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');S.validate=b.dataset.val==='on';});
+$('#btnRefCfg').onclick=()=>{paintRef();show('#scRef');};
+$('#btnRefSave').onclick=()=>{
+  REF=readRef();
+  try{localStorage.setItem('pt_ref',JSON.stringify(REF));}catch(e){}
+  toast('บันทึกเกณฑ์แล้ว');show('#scCfg');
+};
+$('#btnRefReset').onclick=()=>{REF=JSON.parse(JSON.stringify(DEFAULT_REF));paintRef();toast('คืนค่าเริ่มต้นแล้ว กดบันทึกเกณฑ์เพื่อยืนยัน');};
+$('#btnRefCopy').onclick=async()=>{
+  const txt=JSON.stringify(readRef());
+  try{await navigator.clipboard.writeText(txt);toast('คัดลอกแล้ว นำไปวางในเครื่องอื่นได้');}
+  catch(e){prompt('คัดลอกข้อความนี้ไปวางในเครื่องอื่น',txt);}
+};
+$('#btnRefPaste').onclick=()=>{
+  const t=prompt('วางข้อความเกณฑ์ที่คัดลอกมา');
+  if(!t)return;
+  try{REF=Object.assign(JSON.parse(JSON.stringify(DEFAULT_REF)),JSON.parse(t));paintRef();
+      toast('วางเกณฑ์แล้ว กดบันทึกเกณฑ์เพื่อยืนยัน');}
+  catch(e){toast('ข้อความไม่ถูกต้อง');}
+};
+
+/* ---------- ปัจจัยเสี่ยง ---------- */
+const RISKS=[
+ 'เคยหกล้มใน 12 เดือนที่ผ่านมา',
+ 'กลัวการล้ม จนลดการเดินหรือกิจกรรม',
+ 'ใช้ยาตั้งแต่ 4 ชนิดขึ้นไป หรือมียานอนหลับ ยาคลายเครียด ยาลดความดัน',
+ 'มึนศีรษะหรือหน้ามืดเวลาลุกยืน',
+ 'สายตาพร่ามัว ต้อกระจก หรือไม่ได้ตรวจตามานานกว่า 2 ปี',
+ 'ปวดหรือข้อเข่าเสื่อม ทำให้ลงน้ำหนักไม่เต็มที่',
+ 'ชาปลายเท้า หรือมีโรคเบาหวานที่คุมไม่ดี',
+ 'ต้องใช้ไม้เท้าหรืออุปกรณ์ช่วยเดิน',
+ 'ปัสสาวะบ่อยตอนกลางคืน หรือกลั้นปัสสาวะไม่อยู่',
+ 'บ้านมีพื้นลื่น แสงสว่างไม่พอ ไม่มีราวจับในห้องน้ำ หรือมีธรณีประตู',
+ 'อาศัยอยู่คนเดียว หรืออยู่ลำพังเวลากลางวัน'
+];
+function buildRisk(){
+  $('#rfList').innerHTML=RISKS.map((t,i)=>
+    `<button class="rf" data-rf="${i}" aria-pressed="false">${t}</button>`).join('');
+  document.querySelectorAll('[data-rf]').forEach(b=>b.onclick=()=>{
+    const on=b.getAttribute('aria-pressed')==='true';
+    b.setAttribute('aria-pressed',on?'false':'true');
+  });
+}
+function readRisk(){
+  const out=[];
+  document.querySelectorAll('[data-rf]').forEach(b=>{
+    if(b.getAttribute('aria-pressed')==='true') out.push(RISKS[+b.dataset.rf]);});
+  return out;
+}
+function paintRisk(list){
+  document.querySelectorAll('[data-rf]').forEach(b=>
+    b.setAttribute('aria-pressed', list.includes(RISKS[+b.dataset.rf])?'true':'false'));
+}
+
+/* ---------- สภาพแวดล้อม ---------- */
+const ENV={secure:false,camAPI:false,model:false,camOK:null,err:''};
+ENV.secure=window.isSecureContext||location.protocol==='https:'||location.hostname==='localhost';
+ENV.camAPI=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+function refreshStatus(){
+  const s=$('#status');let cls='warn',txt='';
+  if(!ENV.secure){cls='bad';txt='ต้องเปิดผ่าน https';}
+  else if(!ENV.camAPI){cls='bad';txt='เบราว์เซอร์ไม่รองรับกล้อง';}
+  else if(ENV.camOK===false){cls='bad';txt='กล้องยังไม่ได้รับอนุญาต';}
+  else if(!ENV.model){cls='warn';txt='โหมดกดนับเอง';}
+  else{cls='ok';txt=S.sheet?'พร้อมใช้งาน เชื่อมชีตแล้ว':'พร้อมใช้งาน';}
+  s.className=cls;$('#statusText').textContent=txt;renderDiag();
+}
+function renderDiag(){
+  const rows=[['เปิดผ่าน https',ENV.secure?['ผ่าน','ok']:['ไม่ผ่าน','bad']],
+    ['เบราว์เซอร์รองรับกล้อง',ENV.camAPI?['ผ่าน','ok']:['ไม่ผ่าน','bad']],
+    ['สิทธิ์ใช้กล้อง',ENV.camOK===true?['อนุญาตแล้ว','ok']:ENV.camOK===false?['ถูกปฏิเสธ','bad']:['ยังไม่ได้ขอ','warn']],
+    ['ระบบตรวจจับท่าทาง',ENV.model?['พร้อม','ok']:['ใช้โหมดกดนับเอง','warn']],
+    ['เชื่อมต่อ Google Sheet',S.sheet?['ตั้งค่าแล้ว','ok']:['ยังไม่ตั้งค่า','warn']]]
+    .map(([k,[v,c]])=>`<div class="kv"><span>${k}</span><span class="v ${c}">${v}</span></div>`).join('');
+  $('#diag').innerHTML='<h3>สถานะระบบ</h3>'+rows+(ENV.err?`<p class="note">รายละเอียด: ${ENV.err}</p>`:'');
+}
+
+/* ---------- โมเดล ---------- */
+let landmarker=null;
+async function loadModel(){
+  const CDN='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+  for(const delegate of ['GPU','CPU']){
+    try{
+      const mod=await import(CDN);
+      const vision=await mod.FilesetResolver.forVisionTasks(CDN+'/wasm');
+      landmarker=await mod.PoseLandmarker.createFromOptions(vision,{
+        baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',delegate},
+        runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.5});
+      ENV.model=true;refreshStatus();return;
+    }catch(err){ENV.err=String(err).slice(0,140);}
+  }
+  landmarker=null;ENV.model=false;refreshStatus();
+}
+
+/* ---------- กล้อง ---------- */
+const video=$('#cam'),overlay=$('#overlay'),octx=overlay.getContext('2d');
+let stream=null,rafId=null;
+async function openCamera(){
+  if(!ENV.secure)throw new Error('insecure');
+  if(!ENV.camAPI)throw new Error('unsupported');
+  closeCamera();
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:S.facing},width:{ideal:1280},height:{ideal:720}},audio:false});
+  video.srcObject=stream;await video.play();
+  overlay.width=video.videoWidth||1280;overlay.height=video.videoHeight||720;
+  ENV.camOK=true;refreshStatus();
+}
+function closeCamera(){if(rafId)cancelAnimationFrame(rafId);rafId=null;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+function camError(e){
+  ENV.camOK=false;refreshStatus();
+  const n=e&&e.name||String(e);
+  if(String(e).includes('insecure'))return 'กล้องถูกบล็อก เพราะหน้านี้ไม่ได้เปิดผ่าน https';
+  if(n==='NotAllowedError')return 'ยังไม่ได้อนุญาตให้ใช้กล้อง ให้กดอนุญาตในแถบที่อยู่';
+  if(n==='NotFoundError'||n==='OverconstrainedError')return 'ไม่พบกล้องที่ใช้ได้ ลองกดสลับกล้อง';
+  if(n==='NotReadableError')return 'กล้องถูกแอปอื่นใช้อยู่';
+  return 'เปิดกล้องไม่ได้ ใช้โหมดกดนับเองแทนได้';
+}
+
+/* ---------- ท่าทาง ---------- */
+function angle(a,b,c){const ab=[a.x-b.x,a.y-b.y],cb=[c.x-b.x,c.y-b.y];
+  const d=ab[0]*cb[0]+ab[1]*cb[1],m=Math.hypot(...ab)*Math.hypot(...cb);
+  return m?Math.acos(Math.max(-1,Math.min(1,d/m)))*180/Math.PI:180;}
+const ID={sh:[11,12],hip:[23,24],knee:[25,26],ank:[27,28]};
+let posture='down',baseHipY=null,torso=null,lastFlip=0,stoodOnce=false,upSince=0;
+function readPosture(lm){
+  const vis=i=>(lm[i]?.visibility??0);
+  const side=(vis(24)+vis(26)+vis(28))>=(vis(23)+vis(25)+vis(27))?1:0;
+  const hip=lm[ID.hip[side]],knee=lm[ID.knee[side]],ank=lm[ID.ank[side]],sh=lm[ID.sh[side]];
+  if(!hip||!knee||!sh)return null;
+  const seesLeg=vis(ID.knee[side])>.6&&vis(ID.ank[side])>.55;
+  let state=posture;
+  if(seesLeg&&ank){const a=angle(hip,knee,ank);
+    if(a>150)state='up';else if(a<118)state='down';}
+  else{if(baseHipY==null){baseHipY=hip.y;torso=Math.abs(sh.y-hip.y)||.2;}
+    const rise=(baseHipY-hip.y)/torso;
+    if(rise>.45)state='up';else if(rise<.18)state='down';}
+  return{state,hip,knee,ank,sh,quality:(vis(ID.hip[side])+vis(ID.knee[side]))/2};
+}
+/* ---------- สัญญาณการก้าวเดิน ---------- */
+let gaitSamples=[],tStand=null;
+function gaitSignal(lm){
+  const vis=i=>(lm[i]?.visibility??0);
+  const aL=lm[27],aR=lm[28],hL=lm[23],hR=lm[24];
+  if(!aL||!aR||!hL||!hR)return null;
+  if(vis(27)<.35||vis(28)<.35)return null;
+  const hip={x:(hL.x+hR.x)/2,y:(hL.y+hR.y)/2};
+  const mid={x:(aL.x+aR.x)/2,y:(aL.y+aR.y)/2};
+  const leg=Math.hypot(hip.x-mid.x,hip.y-mid.y)||.3;   // ปรับสเกลตามระยะห่างกล้อง
+  return Math.hypot(aL.x-aR.x,aL.y-aR.y)/leg;          // ระยะห่างข้อเท้าสองข้าง
+}
+function analyzeGait(endT){
+  const s=gaitSamples.filter(p=>p.t>(tStand??0)+.4&&p.t<endT-.4);
+  if(s.length<20)return null;
+  const v=s.map((p,i)=>(s[Math.max(0,i-1)].v+p.v+s[Math.min(s.length-1,i+1)].v)/3);
+  const mn=Math.min(...v),mx=Math.max(...v);
+  if(mx-mn<.08)return null;                            // แทบไม่แกว่ง แปลว่าจับก้าวไม่ได้
+  const hi=mn+.45*(mx-mn),lo=mn+.30*(mx-mn);
+  const peaks=[];let inP=false,best=null;
+  for(let i=0;i<v.length;i++){
+    if(!inP&&v[i]>hi){inP=true;best={t:s[i].t,v:v[i]};}
+    else if(inP){
+      if(v[i]>best.v)best={t:s[i].t,v:v[i]};
+      if(v[i]<lo){if(!peaks.length||best.t-peaks[peaks.length-1]>.28)peaks.push(best.t);inP=false;}
+    }
+  }
+  if(inP&&best&&(!peaks.length||best.t-peaks[peaks.length-1]>.28))peaks.push(best.t);
+  if(peaks.length<4)return null;
+  const it=[];for(let i=1;i<peaks.length;i++)it.push(peaks[i]-peaks[i-1]);
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  const m=mean(it),sd=Math.sqrt(mean(it.map(x=>(x-m)*(x-m))));
+  const odd=it.filter((_,i)=>i%2===0),even=it.filter((_,i)=>i%2===1);
+  return{steps:peaks.length,times:it,stepTime:+m.toFixed(2),cv:+(sd/m*100).toFixed(1),
+    cadence:Math.round(60/m),asym:even.length?+Math.abs(mean(odd)-mean(even))/m*100:null,
+    stepLen:+((2*S.dist)/peaks.length).toFixed(2),walkTime:+(peaks[peaks.length-1]-peaks[0]).toFixed(1)};
+}
+function drawSkeleton(p){
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  if(!p)return;
+  const W=overlay.width,H=overlay.height,pts=[p.sh,p.hip,p.knee,p.ank].filter(Boolean);
+  octx.strokeStyle=posture==='up'?'#3FD08A':'#FFC24B';
+  octx.lineWidth=Math.max(4,W/220);octx.lineCap='round';
+  octx.beginPath();pts.forEach((q,i)=>i?octx.lineTo(q.x*W,q.y*H):octx.moveTo(q.x*W,q.y*H));octx.stroke();
+  octx.fillStyle=octx.strokeStyle;
+  pts.forEach(q=>{octx.beginPath();octx.arc(q.x*W,q.y*H,Math.max(6,W/150),0,7);octx.fill();});
+}
+function loop(){
+  rafId=requestAnimationFrame(loop);
+  if(!landmarker||video.readyState<2)return;
+  let res;try{res=landmarker.detectForVideo(video,performance.now());}catch(e){return;}
+  const lm=res?.landmarks?.[0];
+  if(!lm){drawSkeleton(null);if(S.phase==='ready')cue('ยังไม่พบผู้รับบริการในภาพ','warn');return;}
+  const p=readPosture(lm);if(!p)return;drawSkeleton(p);
+  if(S.phase==='running'&&S.test==='tug'){
+    const g=gaitSignal(lm);
+    if(g!=null)gaitSamples.push({t:(performance.now()-S.t0)/1000,v:g});
+  }
+  if(S.phase==='ready'){
+    cue(p.quality>.7?'เห็นภาพชัดเจนแล้ว นั่งหลังพิงพนัก แล้วกดเริ่มจับเวลา':'ขยับกล้องให้เห็นตั้งแต่สะโพกถึงเท้า',p.quality>.7?'ok':'warn');
+    baseHipY=null;return;}
+  if(S.phase!=='running')return;
+  const now=performance.now();
+  if(p.state!==posture&&now-lastFlip>320){
+    lastFlip=now;const wasDown=posture==='down';posture=p.state;
+    if(posture==='up'){upSince=now;if(!stoodOnce&&S.test==='tug')tStand=(now-S.t0)/1000;
+      stoodOnce=true;if(S.test==='sts'&&wasDown)addRep();}
+    if(posture==='down'&&S.test==='tug'&&stoodOnce&&now-upSince>1500)finishTUG((now-S.t0)/1000);
+  }
+}
+
+/* ---------- ตัวนับ ---------- */
+const R=92,CIRC=2*Math.PI*R;
+$('#drain').style.strokeDasharray=CIRC;
+const setDrain=f=>$('#drain').style.strokeDashoffset=CIRC*(1-f);
+let actx=null;
+function beep(f=880,d=.14,v=.25){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.connect(g);g.connect(actx.destination);
+  g.gain.setValueAtTime(v,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+function addRep(){S.reps++;S.stamps.push((performance.now()-S.t0)/1000);
+  $('#count').textContent=S.reps;
+  const g=$('#gauge');g.classList.remove('pulse');void g.offsetWidth;g.classList.add('pulse');
+  beep(660,.08,.18);drawTicks();}
+function drawTicks(){const svg=$('#ticks');svg.innerHTML='';
+  S.stamps.forEach(t=>{const a=(t/30)*2*Math.PI-Math.PI/2;
+    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',100+78*Math.cos(a));l.setAttribute('y1',100+78*Math.sin(a));
+    l.setAttribute('x2',100+88*Math.cos(a));l.setAttribute('y2',100+88*Math.sin(a));
+    l.setAttribute('stroke','#EAF2F4');l.setAttribute('stroke-width','3');l.setAttribute('opacity','.75');
+    svg.appendChild(l);});}
+const cue=(t,c='')=>{const e=$('#cue');e.textContent=t;e.className=c;};
+
+/* ---------- ผู้รับบริการ ---------- */
+document.querySelectorAll('[data-sex]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-sex]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');});
+function pickedSex(){const b=document.querySelector('[data-sex][aria-pressed=true]');return b?b.dataset.sex:null;}
+
+$('#btnEnter').onclick=()=>{
+  const name=$('#fName').value.trim()||'ไม่ระบุ';
+  const age=parseInt($('#fAge').value,10);
+  const sex=pickedSex();
+  if(!age||age<40){toast('กรุณากรอกอายุ');$('#fAge').focus();return;}
+  if(!sex){toast('กรุณาเลือกเพศ');return;}
+  S.person={name,age,sex,started:new Date(),sts:null,tug:null,risks:null};
+  renderHub();show('#scHub');
+};
+function renderHub(){
+  const p=S.person;
+  $('#hubName').textContent=p.name;
+  $('#hubMeta').textContent=`${p.age} ปี  ${p.sex==='male'?'ชาย':'หญิง'}  ·  ${thaiDT(p.started)}`;
+  const a=$('#stSTS'),b=$('#stTUG'),c=$('#stRisk');
+  if(p.sts){a.textContent=`${p.sts.value} ครั้ง — ${p.sts.level}`;a.className='s '+p.sts.key;}
+  else{a.textContent='ยังไม่ได้ทดสอบ';a.className='s';}
+  if(p.tug){b.textContent=`${p.tug.value} วินาที — ${p.tug.level}`+
+      (p.tug.gait?`  ·  ${p.tug.gait.steps} ก้าว`:'');b.className='s '+p.tug.key;}
+  else{b.textContent='ยังไม่ได้ทดสอบ';b.className='s';}
+  if(p.risks){c.textContent=`พบ ${p.risks.length} ข้อ`;c.className='s '+(p.risks.length>=3?'bad':p.risks.length>=1?'warn':'ok');}
+  else{c.textContent='ยังไม่ได้ประเมิน';c.className='s';}
+}
+$('#btnNewPerson').onclick=()=>{
+  S.person=null;$('#fName').value='';$('#fAge').value='';
+  document.querySelectorAll('[data-sex]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  paintRisk([]);show('#scSetup');
+};
+$('#slotSTS').onclick=()=>beginTest('sts');
+$('#slotTUG').onclick=()=>beginTest('tug');
+$('#slotRisk').onclick=()=>{paintRisk(S.person.risks||[]);show('#scRisk');};
+$('#btnRiskDone').onclick=()=>{S.person.risks=readRisk();renderHub();show('#scHub');};
+
+/* ---------- ทดสอบ ---------- */
+async function beginTest(kind){
+  S.test=kind;show('#scTest');S.phase='ready';resetTrial();
+  $('#btnTap').hidden=!!landmarker;
+  try{await openCamera();if(landmarker&&!rafId)loop();
+    if(!landmarker){$('#btnTap').hidden=false;cue(kind==='sts'?'ผู้ช่วยกดปุ่มนับทุกครั้งที่ลุกยืน':'กดหยุดเมื่อผู้รับบริการนั่งลง','warn');}
+  }catch(e){cue(camError(e),'warn');$('#btnTap').hidden=false;}
+}
+function resetTrial(){
+  S.reps=0;S.stamps=[];S.tug=null;posture='down';stoodOnce=false;baseHipY=null;
+  gaitSamples=[];tStand=null;
+  $('#count').textContent='0';
+  $('#unit').textContent=S.test==='sts'?'ครั้ง':'วินาที';
+  $('#clock').textContent=S.test==='sts'?'30.0 วินาที':'พร้อมเริ่ม';
+  $('#ticks').innerHTML='';setDrain(1);
+  $('#btnGo').textContent='เริ่มจับเวลา';$('#btnGo').disabled=false;$('#btnGo').onclick=()=>countdown(3);
+}
+let timerId=null;
+function countdown(n){
+  if(S.phase==='running')return;
+  S.phase='countdown';$('#btnGo').disabled=true;
+  cue(S.test==='sts'?'ลุกยืนให้สุด แล้วนั่งลง ทำซ้ำให้ได้มากที่สุดใน 30 วินาที'
+                    :'ลุกยืน เดินไป 3 เมตร แล้วกลับมานั่ง ด้วยความเร็วที่ปลอดภัย','ok');
+  $('#count').textContent=n;beep(520,.1);
+  if(n===0)return startTrial();
+  setTimeout(()=>countdown(n-1),1000);
+}
+function startTrial(){
+  S.phase='running';S.t0=performance.now();posture='down';stoodOnce=false;
+  S.reps=0;S.stamps=[];gaitSamples=[];tStand=null;$('#count').textContent='0';beep(1040,.22,.3);
+  $('#btnGo').textContent='หยุด';$('#btnGo').disabled=false;
+  $('#btnGo').onclick=()=>S.test==='sts'?finishSTS():finishTUG((performance.now()-S.t0)/1000);
+  timerId=setInterval(tick,80);
+}
+function tick(){
+  const el=(performance.now()-S.t0)/1000;
+  if(S.test==='sts'){const left=Math.max(0,30-el);
+    $('#clock').textContent=left.toFixed(1)+' วินาที';setDrain(left/30);
+    if(left<=0)finishSTS();}
+  else{$('#count').textContent=el.toFixed(1);$('#clock').textContent='กำลังจับเวลา';
+    setDrain(Math.max(0,1-el/30));}
+}
+$('#btnTap').onclick=()=>{if(S.phase==='running'&&S.test==='sts')addRep();};
+$('#btnFlip').onclick=async()=>{S.facing=S.facing==='environment'?'user':'environment';
+  try{await openCamera();if(landmarker&&!rafId)loop();}catch(e){cue(camError(e),'warn');}};
+$('#btnBack').onclick=()=>{clearInterval(timerId);closeCamera();S.phase='hub';renderHub();show('#scHub');};
+function finishSTS(){clearInterval(timerId);S.phase='result';beep(392,.4,.3);closeCamera();recordSTS();}
+function finishTUG(sec){clearInterval(timerId);S.phase='result';S.tug=sec;beep(392,.4,.3);closeCamera();recordTUG(sec);}
+
+/* ---------- บันทึกผลรายการทดสอบ ---------- */
+function fatigue(){
+  if(S.stamps.length<4)return null;
+  const g=[];for(let i=1;i<S.stamps.length;i++)g.push(S.stamps[i]-S.stamps[i-1]);
+  const h=Math.ceil(g.length/2),avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  return{gaps:g,cycle:avg(g),change:((avg(g.slice(h))-avg(g.slice(0,h)))/avg(g.slice(0,h)))*100};
+}
+function recordSTS(){
+  const p=S.person,lower=stsLower(p.age,p.sex),v=S.reps;
+  const key=v>=lower?'go':(v>=lower-2?'warn':'stop');
+  const level={go:'ผ่านเกณฑ์',warn:'เฝ้าระวัง',stop:'เสี่ยงสูง'}[key];
+  const f=fatigue();
+  p.sts={value:v,lower,key,level,at:new Date(),stamps:S.stamps.slice(),
+         cycle:f?+f.cycle.toFixed(2):null,change:f?+f.change.toFixed(0):null,
+         mode:landmarker?'ตรวจจับอัตโนมัติ':'กดนับเอง'};
+  showResult('sts');
+}
+function recordTUG(sec){
+  const p=S.person,v=+sec.toFixed(1);
+  const key=v<REF.tugW?'go':(v<REF.tugR?'warn':'stop');
+  const level={go:'ผ่านเกณฑ์',warn:'เฝ้าระวัง',stop:'เสี่ยงสูง'}[key];
+  p.tug={value:v,key,level,at:new Date(),gait:landmarker?analyzeGait(sec):null,
+         mode:landmarker?'ตรวจจับอัตโนมัติ':'กดนับเอง'};
+  showResult('tug');
+}
+function showResult(kind){
+  const p=S.person,r=kind==='sts'?p.sts:p.tug;
+  $('#resBand').className='band '+r.key;
+  $('#resValue').textContent=r.value;
+  $('#resUnit').textContent=kind==='sts'?'ครั้ง / 30 วินาที':'วินาที';
+  $('#resVerdict').textContent=kind==='sts'
+    ?(r.key==='go'?'ความแข็งแรงขาอยู่ในเกณฑ์':r.key==='warn'?'ความแข็งแรงขาต่ำกว่าเกณฑ์':'ความแข็งแรงขาต่ำกว่าเกณฑ์มาก')
+    :(r.key==='go'?'ความคล่องตัวในการเดินอยู่ในเกณฑ์':r.key==='warn'?'เดินช้ากว่าเกณฑ์':'เดินช้ากว่าเกณฑ์มาก');
+  $('#resWhen').textContent=`${p.name}  ·  ทดสอบเมื่อ ${thaiDT(r.at)}`;
+  if(kind==='sts'){
+    $('#rhythmCard').hidden=false;$('#gaitCard').hidden=true;drawRhythm();
+    $('#refBox').innerHTML=`<h3>เกณฑ์อ้างอิง</h3>
+      <div class="kv"><span>ค่าที่วัดได้</span><span class="v">${r.value} ครั้ง</span></div>
+      <div class="kv"><span>ขอบล่างเกณฑ์ปกติ (${p.age} ปี ${p.sex==='male'?'ชาย':'หญิง'})</span><span class="v">${r.lower} ครั้ง</span></div>
+      <div class="kv"><span>ส่วนต่าง</span><span class="v ${r.key==='go'?'ok':'bad'}">${r.value-r.lower>=0?'+':''}${r.value-r.lower} ครั้ง</span></div>
+      ${r.cycle?`<div class="kv"><span>เวลาเฉลี่ยต่อรอบ</span><span class="v">${r.cycle} วินาที/ครั้ง</span></div>`:''}
+      <div class="kv"><span>แหล่งเกณฑ์</span><span class="v">${REF.source}</span></div>`;
+  }else{
+    $('#rhythmCard').hidden=true;$('#gaitCard').hidden=false;drawGait(r.gait);
+    $('#refBox').innerHTML=`<h3>เกณฑ์อ้างอิง</h3>
+      <div class="kv"><span>ค่าที่วัดได้</span><span class="v">${r.value} วินาที</span></div>
+      <div class="kv"><span>เฝ้าระวัง</span><span class="v">≥ ${REF.tugW.toFixed(1)} วินาที</span></div>
+      <div class="kv"><span>เสี่ยงสูง</span><span class="v">≥ ${REF.tugR.toFixed(1)} วินาที</span></div>
+      <div class="kv"><span>แหล่งเกณฑ์</span><span class="v">${REF.source}</span></div>`;
+  }
+  $('#valBox').hidden=!S.validate;
+  $('#fManual').value=(r.manual!=null?r.manual:'');
+  $('#fManual').placeholder=kind==='sts'?'จำนวนครั้งที่นับได้':'เวลาที่จับได้ (วินาที)';
+  show('#scResult');
+}
+function saveManual(){
+  if(!S.validate||!S.person)return;
+  const v=parseFloat($('#fManual').value);
+  const r=S.test==='sts'?S.person.sts:S.person.tug;
+  if(r)r.manual=isNaN(v)?null:v;
+}
+function drawRhythm(){
+  const svg=$('#rhythm');svg.innerHTML='';
+  const f=fatigue();
+  if(!f){$('#rhythmNote').textContent='จำนวนครั้งน้อยเกินกว่าจะวิเคราะห์จังหวะได้';return;}
+  const g=f.gaps,maxG=Math.max(...g),w=300/g.length;
+  const base=g.slice(0,Math.ceil(g.length/2)).reduce((a,b)=>a+b,0)/Math.ceil(g.length/2);
+  g.forEach((x,i)=>{const h=Math.max(4,(x/maxG)*50);
+    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',i*w+1);r.setAttribute('y',56-h);r.setAttribute('width',Math.max(2,w-3));
+    r.setAttribute('height',h);r.setAttribute('rx','2');
+    r.setAttribute('fill',x>base*1.3?'#FFC24B':'#3FD08A');svg.appendChild(r);});
+  const c=f.change;
+  $('#rhythmNote').textContent=
+    `เวลาเฉลี่ย ${f.cycle.toFixed(2)} วินาทีต่อครั้ง — `+
+    (c>25?`ครึ่งหลังช้าลง ${Math.round(c)}% บ่งชี้ความล้าของกล้ามเนื้อขา ควรเพิ่มการฝึกความทนทาน`
+     :c>=0?`ครึ่งหลังช้าลงเล็กน้อย ${Math.round(c)}% ถือว่าจังหวะสม่ำเสมอ`
+     :`ครึ่งหลังเร็วขึ้น ${Math.round(-c)}% แสดงว่าปรับจังหวะได้ดีขึ้นระหว่างทดสอบ`);
+}
+function gaitFlags(g){
+  return{slow:g.cadence<REF.cad,vary:g.cv>REF.cv,mildVary:g.cv>REF.cv/2&&g.cv<=REF.cv,
+         asym:g.asym!=null&&g.asym>REF.asym,short:g.stepLen<REF.len};
+}
+function drawGait(g){
+  const svg=$('#stepChart');svg.innerHTML='';
+  if(!g){
+    $('#gaitFigures').innerHTML='';
+    $('#gaitNote').textContent='ตรวจจับก้าวเดินไม่ได้ในรอบนี้ มักเกิดจากข้อเท้าหลุดออกนอกเฟรมระหว่างเดิน ให้ถอยกล้องออกให้เห็นทางเดินตลอด 3 เมตร แล้วทดสอบซ้ำ';
+    return;
+  }
+  const mx=Math.max(...g.times),w=300/g.times.length;
+  g.times.forEach((x,i)=>{const h=Math.max(4,(x/mx)*50);
+    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',i*w+1);r.setAttribute('y',56-h);r.setAttribute('width',Math.max(2,w-3));
+    r.setAttribute('height',h);r.setAttribute('rx','2');
+    r.setAttribute('fill',x>g.stepTime*1.25?'#FFC24B':'#3FD08A');svg.appendChild(r);});
+  const f=gaitFlags(g);
+  $('#gaitFigures').innerHTML=
+   `<div class="kv"><span>จำนวนก้าว</span><span class="v">${g.steps} ก้าว</span></div>
+    <div class="kv"><span>จังหวะก้าว</span><span class="v ${f.slow?'bad':'ok'}">${g.cadence} ก้าว/นาที</span></div>
+    <div class="kv"><span>เวลาต่อก้าว</span><span class="v">${g.stepTime} วินาที</span></div>
+    <div class="kv"><span>ความแปรปรวนของจังหวะ</span><span class="v ${f.vary?'bad':f.mildVary?'warn':'ok'}">${g.cv}%</span></div>
+    ${g.asym!=null?`<div class="kv"><span>ความไม่สมมาตรซ้าย-ขวา</span><span class="v ${f.asym?'warn':'ok'}">${g.asym.toFixed(0)}%</span></div>`:''}
+    <div class="kv"><span>ความยาวก้าวโดยประมาณ</span><span class="v ${f.short?'warn':'ok'}">${g.stepLen} เมตร</span></div>`;
+  const msg=[];
+  if(f.slow)msg.push(`จังหวะก้าวช้ากว่าเกณฑ์ที่ตั้งไว้ (${REF.cad} ก้าวต่อนาที)`);
+  if(f.vary)msg.push('จังหวะก้าวไม่สม่ำเสมอชัดเจน เป็นตัวบ่งชี้ความเสี่ยงหกล้มที่สำคัญ');
+  else if(f.mildVary)msg.push('จังหวะก้าวเริ่มไม่สม่ำเสมอ ควรเฝ้าระวัง');
+  if(f.asym)msg.push('ก้าวซ้ายขวาไม่เท่ากัน ควรตรวจหาสาเหตุ เช่น ปวดข้อ อ่อนแรงข้างเดียว หรืออาการทางระบบประสาท');
+  if(f.short)msg.push('ก้าวสั้นกว่าปกติ มักพบร่วมกับความกลัวการล้มหรือกำลังขาไม่พอ');
+  $('#gaitNote').textContent = (msg.length?msg.join(' · ')
+    :'จังหวะก้าวสม่ำเสมอและอยู่ในเกณฑ์')+
+    ' — แท่งสูงคือก้าวที่ใช้เวลานานกว่าปกติ ค่าความยาวก้าวเป็นค่าประมาณจากระยะทางหารจำนวนก้าว';
+}
+$('#btnResultBack').onclick=()=>{saveManual();renderHub();show('#scHub');};
+$('#btnRetry').onclick=()=>{saveManual();beginTest(S.test);};
+
+/* ---------- สรุปรวม ---------- */
+$('#btnSummary').onclick=()=>{
+  const p=S.person;
+  if(!p.sts&&!p.tug){toast('ต้องทดสอบอย่างน้อย 1 รายการก่อน');return;}
+  renderSummary();show('#scSum');
+};
+$('#btnSumBack').onclick=()=>{renderHub();show('#scHub');};
+
+function overall(){
+  const p=S.person,sc={go:0,warn:1,stop:2};
+  const lv=Math.max(p.sts?sc[p.sts.key]:0,p.tug?sc[p.tug.key]:0);
+  const n=(p.risks||[]).length;
+  if(lv===2||n>=5||(lv===1&&n>=3))return{key:'stop',label:'ความเสี่ยงหกล้มระดับสูง',lv,n};
+  if(lv===1||n>=2)return{key:'warn',label:'ความเสี่ยงหกล้มระดับปานกลาง',lv,n};
+  return{key:'go',label:'ความเสี่ยงหกล้มระดับต่ำ',lv,n};
+}
+function patternText(){
+  const p=S.person;
+  if(!p.sts||!p.tug)return{h:'ความสัมพันธ์ระหว่างสองการทดสอบ',b:'ทดสอบครบทั้งสองรายการเพื่อดูว่าปัญหาหลักอยู่ที่กำลังกล้ามเนื้อขาหรือการทรงตัวขณะเดิน'};
+  const weak=p.sts.key!=='go',slow=p.tug.key!=='go';
+  if(!weak&&!slow)return{h:'กำลังขาและการเดินสัมพันธ์กันดี',b:'ทั้งความแข็งแรงของขาและความคล่องตัวในการเดินอยู่ในเกณฑ์ แนะนำคงระดับกิจกรรมเดิมและคัดกรองซ้ำตามรอบ'};
+  if(weak&&!slow)return{h:'ข้อจำกัดอยู่ที่กำลังกล้ามเนื้อขา',b:'เดินได้คล่องแต่ลุกนั่งได้น้อยกว่าเกณฑ์ แปลว่ากำลังกล้ามเนื้อต้นขาเป็นข้อจำกัดหลัก ควรเน้นการฝึกแบบมีแรงต้านที่ขา เช่น ลุกนั่งเก้าอี้เป็นชุด ก่อนที่จะกระทบการเดินในระยะถัดไป'};
+  if(!weak&&slow)return{h:'ข้อจำกัดอยู่ที่การทรงตัวและการควบคุมการเดิน',b:'กำลังขายังดีแต่เดินไป-กลับช้า ปัญหาจึงน่าจะมาจากการทรงตัว การกลับตัว ความกลัวการล้ม หรือการมองเห็น มากกว่ากำลังกล้ามเนื้อ ควรประเมินการทรงตัวอย่างละเอียดและตรวจสายตากับยาที่ใช้ร่วมด้วย'};
+  return{h:'บกพร่องทั้งกำลังขาและการเดิน',b:'ทั้งสองการทดสอบต่ำกว่าเกณฑ์พร้อมกัน เป็นรูปแบบที่สัมพันธ์กับความเสี่ยงหกล้มสูงที่สุด ควรส่งพบนักกายภาพบำบัดเพื่อวางโปรแกรมเฉพาะรายและปรับสภาพแวดล้อมในบ้านควบคู่กัน'};
+}
+function planFor(o){
+  const p=S.person,out=[];
+  if(o.key==='go'){
+    out.push('คงกิจกรรมทางกายเดิม เดินหรือออกกำลังกายอย่างน้อย 150 นาทีต่อสัปดาห์');
+    out.push('เพิ่มการฝึกกำลังขาแบบลุกนั่งเก้าอี้ 10–15 ครั้ง วันละ 2 ชุด สัปดาห์ละ 2–3 วัน');
+    out.push('นัดคัดกรองซ้ำใน 6 เดือน');
+  }else if(o.key==='warn'){
+    out.push('เข้าโปรแกรมออกกำลังกายเพิ่มความแข็งแรงขาและการทรงตัว สัปดาห์ละ 3 วัน ต่อเนื่องอย่างน้อย 12 สัปดาห์');
+    out.push('ให้ อสม. หรือผู้ดูแลติดตามการฝึกที่บ้าน และตรวจสอบแสงสว่าง ราวจับ พื้นลื่นในห้องน้ำ');
+    out.push('นัดประเมินซ้ำใน 3 เดือน หากค่าไม่ดีขึ้นให้ส่งพบนักกายภาพบำบัด');
+  }else{
+    out.push('ส่งพบนักกายภาพบำบัดเพื่อประเมินการทรงตัวอย่างละเอียด เช่น Berg Balance Scale ภายใน 1 เดือน');
+    out.push('เยี่ยมบ้านเพื่อปรับสภาพแวดล้อม ติดราวจับห้องน้ำ เพิ่มแสงสว่าง เก็บสายไฟและพรมที่ทำให้สะดุด');
+    out.push('ทบทวนรายการยากับแพทย์หรือเภสัชกร โดยเฉพาะยานอนหลับและยาลดความดัน');
+    out.push('ฝึกกำลังขาและการทรงตัวแบบมีผู้ดูแลใกล้ชิด ไม่ฝึกลำพัง');
+    out.push('นัดติดตามภายใน 1 เดือน');
+  }
+  if(p.tug&&p.tug.key!=='go') out.push('พิจารณาความเหมาะสมของอุปกรณ์ช่วยเดินและความสูงของเก้าอี้ที่ใช้ประจำ');
+  const g=p.tug&&p.tug.gait;
+  if(g){
+    if(g.cv>REF.cv) out.push('จังหวะก้าวไม่สม่ำเสมอ ให้ฝึกเดินตามจังหวะเสียงหรือเดินตามรอยเท้าที่กำหนดระยะ เพื่อฝึกความสม่ำเสมอของก้าว');
+    if(g.asym!=null&&g.asym>REF.asym) out.push('ก้าวซ้ายขวาไม่เท่ากัน ควรตรวจหาสาเหตุด้านข้อ กล้ามเนื้อ หรือระบบประสาทก่อนวางโปรแกรมฝึกเดิน');
+    if(g.stepLen<REF.len) out.push('ก้าวสั้น ให้ฝึกก้าวยาวขึ้นโดยมีเป้าหมายบนพื้นและมีคนดูแลใกล้ชิด');
+    if(g.cadence<REF.cad) out.push('จังหวะก้าวช้า ควรฝึกเดินต่อเนื่องเพิ่มระยะเวลาทีละน้อยควบคู่กับการฝึกกำลังขา');
+  }
+  if(p.sts&&p.sts.change>25) out.push('พบความล้าชัดเจนระหว่างทดสอบ ให้แบ่งการฝึกเป็นชุดสั้นหลายรอบต่อวันแทนการฝึกยาวครั้งเดียว');
+  if((p.risks||[]).some(r=>r.includes('เคยหกล้ม'))) out.push('มีประวัติหกล้มเดิม ให้ซักประวัติสถานการณ์การล้มและบันทึกไว้ในแฟ้มติดตาม');
+  return out;
+}
+function renderSummary(){
+  const p=S.person,o=overall(),pat=patternText();
+  $('#sumBand').className='band '+o.key;
+  $('#sumVerdict').textContent=o.label;
+  $('#sumWhen').textContent=`${p.name}  ${p.age} ปี ${p.sex==='male'?'ชาย':'หญิง'}  ·  ${thaiDT(new Date())}`;
+  $('#sumFigures').innerHTML='<h3>ผลการทดสอบ</h3>'+
+    (p.sts?`<div class="kv"><span>ลุกนั่ง 30 วินาที (เกณฑ์ ${p.sts.lower} ครั้ง)</span><span class="v ${p.sts.key==='go'?'ok':p.sts.key==='warn'?'warn':'bad'}">${p.sts.value} ครั้ง</span></div>`:'')+
+    (p.sts&&p.sts.cycle?`<div class="kv"><span>เวลาเฉลี่ยต่อรอบการลุก</span><span class="v">${p.sts.cycle} วินาที</span></div>`:'')+
+    (p.tug?`<div class="kv"><span>ลุกเดินไป-กลับ ${S.dist} เมตร (เกณฑ์ < ${REF.tugW} วินาที)</span><span class="v ${p.tug.key==='go'?'ok':p.tug.key==='warn'?'warn':'bad'}">${p.tug.value} วินาที</span></div>`:'')+
+    (p.tug&&p.tug.gait?`<div class="kv"><span>จำนวนก้าว</span><span class="v">${p.tug.gait.steps} ก้าว</span></div>
+      <div class="kv"><span>จังหวะก้าว</span><span class="v ${p.tug.gait.cadence<REF.cad?'bad':'ok'}">${p.tug.gait.cadence} ก้าว/นาที</span></div>
+      <div class="kv"><span>ความแปรปรวนของจังหวะก้าว</span><span class="v ${p.tug.gait.cv>REF.cv?'bad':p.tug.gait.cv>REF.cv/2?'warn':'ok'}">${p.tug.gait.cv}%</span></div>`:'')+
+    (p.sts?`<div class="kv"><span>เวลาทดสอบลุกนั่ง</span><span class="v">${thaiDT(p.sts.at)}</span></div>`:'')+
+    (p.tug?`<div class="kv"><span>เวลาทดสอบเดิน</span><span class="v">${thaiDT(p.tug.at)}</span></div>`:'');
+  $('#sumPattern').innerHTML=`<h3>${pat.h}</h3><p style="font-size:16px;line-height:1.6;color:#CFE0E4">${pat.b}</p>`;
+  const rl=p.risks||[];
+  $('#sumRisk').innerHTML=`<h3>ปัจจัยเสี่ยงที่พบ ${rl.length} ข้อ</h3>`+
+    (rl.length?`<ul class="advice warnlist">${rl.map(r=>`<li>${r}</li>`).join('')}</ul>`
+             :'<p class="note">ไม่พบปัจจัยเสี่ยงจากรายการที่ประเมิน หรือยังไม่ได้ประเมิน</p>');
+  $('#sumPlan').innerHTML=planFor(o).map(x=>`<li>${x}</li>`).join('');
+}
+
+/* ---------- ส่งขึ้นชีต ---------- */
+function toRow(){
+  const p=S.person,o=overall(),pat=patternText();
+  return{time:new Date().toISOString(),name:p.name,age:p.age,sex:p.sex==='male'?'ชาย':'หญิง',
+    site:S.site||'ไม่ระบุ',
+    sts:p.sts?p.sts.value:'',stsRef:p.sts?p.sts.lower:'',stsLevel:p.sts?p.sts.level:'',
+    stsAt:p.sts?thaiDT(p.sts.at):'',cycle:p.sts&&p.sts.cycle?p.sts.cycle:'',
+    fatigue:p.sts&&p.sts.change!=null?p.sts.change:'',
+    tug:p.tug?p.tug.value:'',tugLevel:p.tug?p.tug.level:'',tugAt:p.tug?thaiDT(p.tug.at):'',
+    steps:p.tug&&p.tug.gait?p.tug.gait.steps:'',
+    cadence:p.tug&&p.tug.gait?p.tug.gait.cadence:'',
+    stepTime:p.tug&&p.tug.gait?p.tug.gait.stepTime:'',
+    stepCV:p.tug&&p.tug.gait?p.tug.gait.cv:'',
+    stepAsym:p.tug&&p.tug.gait&&p.tug.gait.asym!=null?+p.tug.gait.asym.toFixed(0):'',
+    stepLen:p.tug&&p.tug.gait?p.tug.gait.stepLen:'',
+    stepTimes:p.tug&&p.tug.gait?p.tug.gait.times.map(x=>x.toFixed(2)).join(' '):'',
+    stsManual:p.sts&&p.sts.manual!=null?p.sts.manual:'',
+    tugManual:p.tug&&p.tug.manual!=null?p.tug.manual:'',
+    refSource:REF.source,
+    riskCount:(p.risks||[]).length,riskList:(p.risks||[]).join(' / '),
+    overall:o.label,pattern:pat.h,plan:planFor(o).join(' / '),
+    mode:landmarker?'ตรวจจับอัตโนมัติ':'กดนับเอง',
+    stamps:p.sts?p.sts.stamps.map(s=>s.toFixed(1)).join(' '):'',sent:false};
+}
+async function sendToSheet(rec){
+  if(!S.sheet)return false;
+  try{
+    const r=await fetch(S.sheet,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(rec),redirect:'follow'});
+    return (await r.text()).includes('ok');
+  }catch(e){
+    try{await fetch(S.sheet,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(rec)});return true;}
+    catch(e2){return false;}
+  }
+}
+$('#btnSaveAll').onclick=async()=>{
+  const rec=toRow();S.records.push(rec);$('#logCount').textContent=S.records.length;
+  if(S.sheet){const ok=await sendToSheet(rec);rec.sent=ok;
+    toast(ok?'บันทึกลง Google Sheet แล้ว':'บันทึกในเครื่องแล้ว รอส่งขึ้นชีตภายหลัง');}
+  else toast('บันทึกในเครื่องแล้ว (ยังไม่ได้เชื่อมชีต)');
+  $('#btnNewPerson').click();
+};
+$('#btnTestSheet').onclick=async()=>{
+  const url=$('#fSheet').value.trim();
+  if(!url){toast('ยังไม่ได้วางลิงก์');return;}
+  S.sheet=url;toast('กำลังทดสอบ…');
+  const ok=await sendToSheet({time:new Date().toISOString(),name:'ทดสอบระบบ',age:'',sex:'',
+    site:$('#fSite').value.trim()||'-',overall:'ทดสอบการเชื่อมต่อ'});
+  toast(ok?'เชื่อมต่อสำเร็จ ดูแถวทดสอบในชีตได้เลย':'เชื่อมต่อไม่สำเร็จ ตรวจสอบว่าลิงก์ลงท้ายด้วย /exec และตั้งสิทธิ์เป็น Anyone');
+};
+$('#btnResend').onclick=async()=>{
+  if(!S.sheet){toast('ยังไม่ได้ตั้งค่าลิงก์ชีต');return;}
+  const pend=S.records.filter(r=>!r.sent);
+  if(!pend.length){toast('ไม่มีรายการค้างส่ง');return;}
+  let n=0;for(const r of pend){if(await sendToSheet(r)){r.sent=true;n++;}}
+  renderLog();toast(`ส่งสำเร็จ ${n} จาก ${pend.length} รายการ`);
+};
+$('#btnLog').onclick=()=>{renderLog();show('#scLog');};
+$('#btnLogBack').onclick=()=>show('#scSetup');
+$('#btnCfg').onclick=()=>{renderDiag();show('#scCfg');};
+$('#btnSaveCfg').onclick=saveCfg;
+/* ---------- ความเที่ยงระหว่างระบบกับผู้ประเมิน ---------- */
+function pairs(kind){
+  return S.records.map(r=>{
+    const a=kind==='sts'?r.sts:r.tug, b=kind==='sts'?r.stsManual:r.tugManual;
+    return (a!==''&&a!=null&&b!==''&&b!=null)?[+a,+b]:null;
+  }).filter(Boolean);
+}
+/* ICC(2,1) two-way random, absolute agreement, k=2 */
+function icc(P){
+  const n=P.length,k=2;
+  if(n<3)return null;
+  const grand=P.reduce((s,p)=>s+p[0]+p[1],0)/(n*k);
+  const rowM=P.map(p=>(p[0]+p[1])/2);
+  const colM=[P.reduce((s,p)=>s+p[0],0)/n,P.reduce((s,p)=>s+p[1],0)/n];
+  let SSR=0,SSC=0,SST=0;
+  P.forEach((p,i)=>{
+    SSR+=k*Math.pow(rowM[i]-grand,2);
+    [0,1].forEach(j=>{SST+=Math.pow(p[j]-grand,2);});
+  });
+  [0,1].forEach(j=>{SSC+=n*Math.pow(colM[j]-grand,2);});
+  const SSE=SST-SSR-SSC;
+  const MSR=SSR/(n-1),MSC=SSC/(k-1),MSE=SSE/((n-1)*(k-1));
+  const den=MSR+(k-1)*MSE+k*(MSC-MSE)/n;
+  if(den<=0)return null;
+  const diffs=P.map(p=>p[0]-p[1]);
+  const md=diffs.reduce((a,b)=>a+b,0)/n;
+  const sd=Math.sqrt(diffs.reduce((a,b)=>a+Math.pow(b-md,2),0)/(n-1||1));
+  return{n,icc:(MSR-MSE)/den,bias:md,sd,loLoA:md-1.96*sd,hiLoA:md+1.96*sd};
+}
+function iccLabel(v){
+  if(v>=.90)return['ดีเยี่ยม ใช้แทนกันได้ในทางคลินิก','ok'];
+  if(v>=.75)return['ดี','ok'];
+  if(v>=.50)return['ปานกลาง ควรปรับอัลกอริทึม','warn'];
+  return['ต่ำ ยังใช้แทนกันไม่ได้','bad'];
+}
+function renderICC(){
+  const box=$('#iccBox');
+  const sets=[['sts','ลุกนั่ง 30 วินาที (ครั้ง)'],['tug','ลุกเดินไป-กลับ (วินาที)']]
+    .map(([k,t])=>[t,icc(pairs(k))]).filter(x=>x[1]);
+  if(!sets.length){box.hidden=true;return;}
+  box.hidden=false;
+  box.innerHTML='<h3>ความสอดคล้องระหว่างระบบกับผู้ประเมิน</h3>'+
+    sets.map(([t,r])=>{
+      const[lab,cls]=iccLabel(r.icc);
+      return `<div class="kv"><span>${t} — จำนวนคู่ข้อมูล</span><span class="v">${r.n}</span></div>
+      <div class="kv"><span>ICC (2,1) absolute agreement</span><span class="v ${cls}">${r.icc.toFixed(3)}</span></div>
+      <div class="kv"><span>การแปลผล</span><span class="v ${cls}">${lab}</span></div>
+      <div class="kv"><span>ค่าเฉลี่ยความต่าง (ระบบ − ผู้ประเมิน)</span><span class="v">${r.bias>=0?'+':''}${r.bias.toFixed(2)}</span></div>
+      <div class="kv"><span>ขอบเขตความสอดคล้อง 95%</span><span class="v">${r.loLoA.toFixed(2)} ถึง ${r.hiLoA.toFixed(2)}</span></div>`;
+    }).join('<div style="height:10px"></div>')+
+    '<p class="note">ค่านี้คำนวณจากข้อมูลที่เก็บในรอบการใช้งานนี้เท่านั้น เพื่อดูแนวโน้มระหว่างเก็บข้อมูล การรายงานผลจริงควรวิเคราะห์จากข้อมูลทั้งหมดในไฟล์ และควรมีอย่างน้อย 30 คู่</p>';
+}
+function renderLog(){
+  renderICC();
+  const w=$('#logWrap'),pend=S.records.filter(r=>!r.sent).length;
+  $('#logSub').textContent=S.records.length?`ทั้งหมด ${S.records.length} ราย ค้างส่งขึ้นชีต ${pend} ราย`:'ยังไม่มีข้อมูล';
+  if(!S.records.length){w.innerHTML='<p class="empty">ยังไม่มีข้อมูล</p>';return;}
+  w.innerHTML=`<table><thead><tr><th>ชื่อ/รหัส</th><th>ลุกนั่ง</th><th>TUG</th><th>เสี่ยง</th><th>ระดับรวม</th><th>ชีต</th></tr></thead><tbody>`+
+    S.records.map(r=>`<tr><td>${r.name}</td><td class="num">${r.sts||'—'}</td><td class="num">${r.tug||'—'}</td>
+    <td class="num">${r.riskCount}</td><td>${r.overall}</td><td>${r.sent?'✓':'—'}</td></tr>`).join('')+`</tbody></table>`;
+}
+$('#btnCsv').onclick=()=>{
+  if(!S.records.length){toast('ยังไม่มีข้อมูล');return;}
+  const head=['วันเวลาบันทึก','ชื่อ/รหัส','อายุ','เพศ','หน่วยบริการ','ลุกนั่ง(ครั้ง)','เกณฑ์ลุกนั่ง','ผลลุกนั่ง','เวลาทดสอบลุกนั่ง','เวลาเฉลี่ยต่อรอบ(วินาที)','ความล้าครึ่งหลัง(%)','TUG(วินาที)','ผล TUG','เวลาทดสอบ TUG','จำนวนก้าว','จังหวะก้าว(ก้าว/นาที)','เวลาต่อก้าว(วินาที)','ความแปรปรวนจังหวะก้าว(%)','ความไม่สมมาตร(%)','ความยาวก้าวประมาณ(เมตร)','เวลาแต่ละก้าว','ลุกนั่งโดยผู้ประเมิน(ครั้ง)','TUGโดยผู้ประเมิน(วินาที)','แหล่งเกณฑ์อ้างอิง','จำนวนปัจจัยเสี่ยง','ปัจจัยเสี่ยงที่พบ','ระดับความเสี่ยงรวม','รูปแบบปัญหา','แผนดำเนินการ','วิธีวัด','เวลาลุกแต่ละครั้ง'];
+  const rows=S.records.map(r=>[r.time,r.name,r.age,r.sex,r.site,r.sts,r.stsRef,r.stsLevel,r.stsAt,r.cycle,r.fatigue,r.tug,r.tugLevel,r.tugAt,r.steps,r.cadence,r.stepTime,r.stepCV,r.stepAsym,r.stepLen,r.stepTimes,r.stsManual,r.tugManual,r.refSource,r.riskCount,r.riskList,r.overall,r.pattern,r.plan,r.mode,r.stamps]);
+  const csv='\uFEFF'+[head,...rows].map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='screening_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+
+buildRisk();buildRefUI();loadRef();loadCfg();refreshStatus();loadModel();
+</script>
+</body>
+</html>
